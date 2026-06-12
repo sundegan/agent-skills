@@ -1,0 +1,6 @@
+name: "update-changelog"
+version: "0.1.0"
+status: "active"
+owners: []
+platforms:
+  - "agent"
