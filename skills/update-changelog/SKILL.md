@@ -7,7 +7,7 @@ description: Generate and update bilingual changelogs from code changes since th
 
 ## Goal
 
-Update the current repository's Chinese and English changelog files from the last published version to the current state. Summarize related code changes together, but verify that every relevant code change in the release range is represented.
+Update the current repository's Chinese and English changelog files from the last published version to the current state. The changelog should cover the release as completely as practical: summarize related code changes together, but verify that every meaningful code change in the release range is either represented by a changelog entry or explicitly excluded for a clear reason.
 
 Default to modifying changelog files in the target repository. Do not change product code while using this skill unless the user explicitly asks.
 
@@ -20,14 +20,9 @@ Default to modifying changelog files in the target repository. Do not change pro
    - If both Chinese and English changelogs exist, update both. If one file contains both languages, preserve that layout.
    - If the repository has public website changelog pages or generated/static copies of the changelog, update those too unless the project clearly generates them from source files.
 3. Determine the target release identity before drafting:
-   - Use a user-provided target version and release date when present. Relative dates such as "today", "今天", "tomorrow", or "yesterday" must be resolved to an absolute date using the current environment date.
-   - If the user did not provide a target version, infer it before asking. Inspect project version files (`package.json`, Cargo manifests, app config, pyproject, gemspec, etc.), release scripts, release branches, unreleased version bumps, tags, and existing changelog headings.
-   - If version files still show the last published version, infer the next version from the change set and existing release pattern when there is clear evidence: use a minor bump for substantial new features or architecture changes, a patch bump for fixes/polish only, and a major bump only when breaking changes are evident or project convention says so.
-   - If the user did not provide a release date, infer it before asking. Prefer an explicit date already present in release files, tag metadata, release notes, or commit metadata; otherwise use the current environment date for a release being prepared now.
-   - Do not leave version or date blank when a reasonable inference can be made. If inferred, make the inference concrete in the final response.
-   - If the target version is still ambiguous after checking available evidence, prefer an `Unreleased` section only when the repository already uses that convention or when no credible target version can be inferred. Otherwise ask for the version instead of inventing one.
-   - If a target version is known, use a real version heading such as `1.3.0`/`v1.3.0` according to existing style; do not leave `Unreleased`, `In progress`, or equivalent placeholders behind.
-   - Keep Markdown changelog headings, website/static changelog entries, release links, visible version labels, and dates consistent across languages and files.
+   - Use concrete version/date values. Take them from the user when provided; otherwise infer them from version files, release scripts/branches, tags, commit/tag metadata, existing changelog headings, release notes, and the change set.
+   - Resolve relative dates to absolute dates. If preparing a release now and no better date evidence exists, use the current environment date. If version files still show the last release, infer the next version from change scope and project release pattern.
+   - Do not leave version/date blank or use placeholders when a credible inference is possible. Ask only when evidence is insufficient; otherwise apply the inferred version/date consistently across Markdown changelogs, website/static copies, visible labels, dates, and release links.
 4. Determine the release range:
    - Use the user-provided base tag, release version, branch, or commit when present.
    - Otherwise treat "last published version" as the latest reachable release tag from `HEAD`, using `git describe --tags --abbrev=0` as the first candidate.
@@ -46,6 +41,7 @@ Default to modifying changelog files in the target repository. Do not change pro
 7. Build a coverage map before editing:
    - List commits, changed files, modules, public APIs, configs, schemas, migrations, user-visible behavior, and notable fixes in the range.
    - Create explicit coverage groups for major feature work, bug fixes, performance changes, architecture/refactor work, page styling/UI polish, documentation/website updates, build/release changes, and operator/integration changes.
+   - Treat the coverage map as mandatory: every changed file, commit cluster, or high-level module change must map to a changelog item or to an explicit exclusion reason.
    - Group similar or tightly related changes into one changelog item.
    - Keep unrelated changes separate even if they touch nearby files.
    - Exclude pure tests, formatting, generated files, vendored dependencies, lockfile-only churn, and internal refactors only when they have no user-visible or operator-visible impact.
@@ -55,8 +51,8 @@ Default to modifying changelog files in the target repository. Do not change pro
 8. Draft changelog entries:
    - Match the existing changelog's granularity and style.
    - Prefer outcome-focused summaries over raw implementation details.
-   - Write for product users, operators, and integrators. Avoid unexplained UI gestures, internal implementation labels, commit-message shorthand, or code-level mechanics unless they are the public feature.
-   - Prefer names users can recognize in the product (`Grid View`, `Tree View`, "folder sidebar") plus a plain description of what they can now do.
+   - Write for product users, operators, and integrators. Avoid unexplained UI operations, overly terse feature labels, internal implementation labels, commit-message shorthand, or code-level mechanics unless they are the public feature.
+   - Prefer product-visible feature, page, or component names plus a plain description of what users can now do.
    - Internal refactors can be changelog-worthy when they materially improve performance, reliability, maintainability, architecture, or enable a user-visible capability. Describe the practical outcome, not just "refactor".
    - Page styling, website, documentation site, and responsive UI changes are changelog-worthy when they affect user-visible presentation or navigation; keep them separate from release packaging or build infrastructure.
    - Do not imply that a feature existed in the previous release by listing fixes to a newly introduced feature under a broad "Fixed" section. For new features, include same-range stabilization as part of the feature or improvement unless it fixes a regression from the last published release.
@@ -68,11 +64,13 @@ Default to modifying changelog files in the target repository. Do not change pro
    - Keep Chinese and English entries aligned in coverage, ordering, and meaning.
 10. Verify quality and completeness:
    - Reconcile every relevant changed file or commit group against the new changelog entries.
+   - Check for unrepresented code changes before finishing. Do not rely on memory or commit messages alone; compare the changed-file list and major diff clusters against the final changelog.
+   - If a change is omitted, record why it is intentionally excluded, such as tests-only, generated output, formatting-only, vendored/lockfile-only churn, or implementation detail with no release impact.
    - Re-read the updated changelog around the insertion point to ensure formatting and style match history.
    - Check that target version, date, release link labels/URLs, and localized visible text are consistent across all changelog surfaces.
    - Search the edited files for leftover placeholders such as `Unreleased`, `In progress`, `TBD`, `TODO`, `进行中`, or stale version numbers when a concrete release version was provided.
    - Read the "Fixed" section critically: each item should either be a regression/bug from a previous released version or a broadly understandable stability fix. Move same-release polish for newly added features into "Added" or "Improved".
-   - Remove or rewrite reader-hostile terms such as unexplained gestures, internal filenames, or implementation-only jargon when they do not help users understand the release.
+   - Remove or rewrite unclear terms such as unexplained UI operations, overly short labels, internal filenames, or implementation-only jargon when they do not help users understand the release.
    - Run `git diff -- <changelog-files>` and inspect the final patch.
 
 ## Change Analysis Rules
@@ -80,6 +78,7 @@ Default to modifying changelog files in the target repository. Do not change pro
 - Use code diff evidence as the source of truth; do not rely only on commit messages.
 - Merge related changes when they implement the same feature, fix the same behavior, or belong to one release-note-worthy capability.
 - Preserve coverage: a merged item must still mention all distinct externally visible outcomes.
+- Bias toward coverage first, then concise wording. It is acceptable to merge related details, but it is not acceptable to silently drop meaningful release changes.
 - Large or cross-cutting changes require explicit consideration even when commit messages say `refactor`, `style`, `chore`, or `perf`. These labels often hide release-note-worthy architecture, performance, page styling, or workflow changes.
 - Treat these as changelog-worthy unless clearly internal-only:
   - new features or user workflows
@@ -104,7 +103,7 @@ Default to modifying changelog files in the target repository. Do not change pro
 - "Added" should describe new capabilities introduced in this release.
 - "Improved" should describe changed behavior, performance, usability, architecture, styling, docs/site improvements, or release process improvements.
 - "Fixed" should primarily describe defects present in a previous released version. Avoid listing fixes for a feature that was introduced and stabilized within the same unreleased range unless users of a prior release could hit the bug.
-- Avoid raw interaction details when a higher-level user outcome is clearer. For example, say "improved tab management" or "added faster tab closing controls" only if that is meaningful in the product; do not rely on terms like "middle-click close" without context.
+- Avoid overly technical, overly terse, or context-dependent wording. Prefer clear user outcomes over raw interaction details, internal labels, abbreviations, or implementation shorthand. If a term requires product or codebase context to understand, rewrite it in plain language.
 - Avoid broad buckets that mix unrelated work. For example, do not combine website responsive styling with release packaging unless the existing changelog style already does so.
 - Prefer a smaller number of clear, coherent entries over a long list of commit-shaped bullets.
 - Each bullet should answer: what changed, who benefits, and why it matters, without requiring the reader to know the commit history.
