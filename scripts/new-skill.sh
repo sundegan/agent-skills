@@ -10,7 +10,6 @@ skill_name="$1"
 resources="${2:-}"
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 skill_dir="$repo_root/skills/$skill_name"
-template_dir="$repo_root/templates/skill"
 
 if [[ ! "$skill_name" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
   echo "Skill name must use lowercase letters, digits, and hyphens only: $skill_name" >&2
@@ -25,8 +24,36 @@ fi
 mkdir -p "$skill_dir/metadata"
 
 skill_title="$(printf '%s' "$skill_name" | awk -F'-' '{ for (i = 1; i <= NF; i++) { $i = toupper(substr($i, 1, 1)) substr($i, 2) } print }')"
-sed "s/{{SKILL_NAME}}/$skill_name/g; s/{{SKILL_TITLE}}/$skill_title/g" "$template_dir/SKILL.md" > "$skill_dir/SKILL.md"
-sed "s/{{SKILL_NAME}}/$skill_name/g" "$template_dir/metadata/skill.yaml" > "$skill_dir/metadata/skill.yaml"
+
+cat > "$skill_dir/SKILL.md" <<EOF
+---
+name: $skill_name
+description: TODO: Describe what this skill does and the specific user requests or contexts that should trigger it.
+---
+
+# $skill_title
+
+## Workflow
+
+1. TODO: Identify the task context and required inputs.
+2. TODO: Use bundled resources only when they are relevant.
+3. TODO: Validate the result before responding.
+
+## Resources
+
+- \`scripts/\`: deterministic helpers for repeatable or fragile work.
+- \`references/\`: detailed docs, schemas, examples, or policies.
+- \`assets/\`: templates, sample files, or media.
+- \`metadata/\`: platform-specific metadata.
+EOF
+
+cat > "$skill_dir/metadata/skill.yaml" <<EOF
+name: "$skill_name"
+version: "0.1.0"
+status: "draft"
+owners: []
+platforms: []
+EOF
 
 if [[ -n "$resources" ]]; then
   IFS=',' read -ra dirs <<< "$resources"
