@@ -1,19 +1,21 @@
 ---
 name: code-review
-description: Review the current task's code changes for bugs, regressions, serious performance problems, inconsistent style, readability, maintainability, controlled impact on existing behavior, and dead or unused code. Use when the user asks Agent to review, audit, inspect, or clean up the current code changes before finishing, committing, or opening a PR.
+description: Review the current task's code-file changes for bugs, regressions, serious performance problems, inconsistent style, readability, maintainability, controlled impact on existing behavior, and dead or unused code while ignoring non-code changes such as documentation-only updates, node_modules, and Go vendor directories. Use when the user asks Agent to review, audit, inspect, or clean up the current code changes before finishing, committing, or opening a PR.
 ---
 
 # Code Review
 
 ## Goal
 
-Review the code changes related to the current task, identify meaningful issues, and clean up dead or unused code when it is safe to do so. Focus on problems that could affect correctness, existing behavior, performance, consistency, readability, or long-term maintenance. Ensure the change's impact is understood, intentional, and controlled. Avoid spending user attention on low-impact speculation.
+Review the code-file changes related to the current task, identify meaningful issues, and clean up dead or unused code when it is safe to do so. Focus on problems that could affect correctness, existing behavior, performance, consistency, readability, or long-term maintenance. Ignore changes that do not affect code behavior, such as documentation-only edits, dependency directories, vendored code, generated artifacts, and formatting output unless they directly affect the current code change. Ensure the change's impact is understood, intentional, and controlled. Avoid spending user attention on low-impact speculation.
 
 ## Workflow
 
 1. Determine the review scope:
    - Use the current conversation, user request, and files Agent changed as the primary boundary.
    - Run `git status --short` and inspect staged, unstaged, and untracked task-related files.
+   - Focus review on source code, tests, build scripts, runtime configuration, schema or migration files, and other files that can change runtime, build, deployment, or developer workflow behavior.
+   - Exclude documentation-only changes, examples that do not execute, formatting-only generated output, dependency caches, vendored dependency trees, and external code directories such as `node_modules/`, `vendor/`, `third_party/`, `.venv/`, `dist/`, `build/`, and generated lockstep artifacts unless the user explicitly asks to review them or they directly affect the code change.
    - If unrelated user changes exist, leave them untouched and exclude them from review unless they affect the current task.
 2. Understand the intended behavior:
    - Re-read the user's request and any implementation notes.
@@ -21,6 +23,7 @@ Review the code changes related to the current task, identify meaningful issues,
    - Prefer repository conventions over generic style preferences.
 3. Review the diff and relevant surrounding code:
    - Use `git diff`, `git diff --cached`, and targeted file reads.
+   - Filter the diff to review code-relevant files first; mention skipped non-code paths only when useful for transparency.
    - Trace call sites, imports, exports, tests, configuration, and public interfaces touched by the task.
    - For frontend or UI changes, check state, rendering conditions, layout assumptions, accessibility basics, and interaction flow.
 4. Assess impact on existing functionality:
@@ -37,6 +40,7 @@ Review the code changes related to the current task, identify meaningful issues,
    - Readability and maintainability problems such as unclear control flow, duplicated logic, leaky abstractions, or overly broad changes.
    - Dead or unused code, including unused imports, variables, functions, components, files, branches, feature flags, stale comments, and unreachable logic.
 6. Ignore low-value issues:
+   - Ignore changes that are unrelated to code behavior, including docs-only updates and dependency/vendor directories, unless they introduce a release, build, packaging, or runtime risk.
    - Do not raise speculative null-pointer or undefined-value concerns when the surrounding code or data flow makes them unrealistic.
    - Do not nitpick formatting that the repository's formatter will handle.
    - Do not ask for abstractions, renames, or micro-optimizations unless they materially improve maintainability or correctness.

@@ -1,6 +1,6 @@
 ---
 name: release-version
-description: Prepare and publish project releases by discovering the repository's release process, updating version files, updating release notes with changelog content, committing release changes, creating Git tags, pushing commits and tags, and checking GitHub Actions builds. Use when the user asks Codex to release a version, publish a release, bump a version, create a release tag, or prepare release notes.
+description: Prepare and publish project releases by discovering the repository's release process, updating version files, updating release notes with changelog content, committing release changes, creating Git tags, pushing commits and tags, and checking GitHub Actions builds. Use when the user asks Agent to release a version, publish a release, bump a version, create a release tag, or prepare release notes.
 ---
 
 # Release Version

@@ -1,13 +1,13 @@
 ---
 name: git-commit
-description: Guide Codex when creating Git commits that follow the Conventional Commits format with concise English messages. Use when the user asks Codex to commit code, make a git commit, submit the current task's changes, stage and commit related files, or generate a commit message for repository changes.
+description: Guide Agent when creating Git commits with concise English Conventional Commits messages. Use when the user asks Agent to commit code, make a git commit, submit the current task's changes, stage and commit related files, or generate a commit message for repository changes.
 ---
 
 # Git Commit
 
 ## Goal
 
-Create a clean Git commit for the current task. Include only changes that are related to the user's request and the work Codex performed in the current context, then write the commit message in the Conventional Commits format with concise, direct English. For larger changes, include a short commit body with a bullet summary of the main code changes.
+Create a clean Git commit for the current task. Include only changes that are related to the user's request and the work Agent performed in the current context, then use a mainstream Conventional Commits message in concise, direct English. For larger changes, include a short commit body with a bullet summary of the main code changes.
 
 ## Workflow
 
@@ -26,38 +26,22 @@ Create a clean Git commit for the current task. Include only changes that are re
    - If the worktree contains unrelated or ambiguous changes, ask before staging them.
 4. Stage the intended files with explicit paths whenever possible. Avoid broad staging commands when unrelated changes are present.
 5. Re-check `git status --short` and `git diff --cached --stat` before committing.
-6. Compose an English commit message that follows Conventional Commits:
-   - Use `<type>(<scope>): <description>` when a clear scope exists.
-   - Use `<type>: <description>` when no concise scope is obvious.
-   - Use `<type>(<scope>)!: <description>` or `<type>!: <description>` for breaking changes.
-   - Keep the description under 72 characters when practical.
+6. Compose an English Conventional Commits message:
+   - Use `<type>(<scope>): <summary>` when a clear scope exists.
+   - Use `<type>: <summary>` when no concise scope is obvious.
+   - Keep the subject under 72 characters when practical.
    - Use imperative, present-tense English.
-   - Do not end the description with a period.
+   - Do not end the subject with a period.
 7. Add a commit body only when the change is large, multi-part, or not obvious from the subject:
    - Leave a blank line after the subject.
    - Add `Summary:` followed by concise bullets.
    - Each bullet should describe a concrete code change or user-visible behavior.
-   - Add footer lines after another blank line when needed, such as `BREAKING CHANGE: ...` or issue references.
 8. Run `git commit` with the prepared message.
 9. Verify the result with `git status --short` and `git log -1 --pretty=fuller --stat`.
 
-## Conventional Commits Format
-
-Use this structure:
-
-```text
-<type>[optional scope][optional !]: <description>
-
-[optional body]
-
-[optional footer(s)]
-```
-
-Use `!` after the type or scope when the commit introduces a breaking change. Also include a `BREAKING CHANGE:` footer that explains the migration impact when the staged diff shows an incompatible API, schema, CLI, config, protocol, or behavior change.
-
 ## Commit Types
 
-Use the repository's configured Conventional Commits types when they exist. Otherwise prefer this widely used Conventional Commits type set:
+Prefer these Conventional Commits types:
 
 - `feat`: user-facing feature or new capability
 - `fix`: bug fix
