@@ -1,30 +1,38 @@
-# Personal Skills
+# Agent Skills
 
-Repository for personal Codex skills.
+Personal repository for reusable agent skills across Codex, Claude, and other AI coding or workflow agents.
 
-## Layout
+## Repository Layout
 
 ```text
 skills/
   <skill-name>/
-    SKILL.md
-    agents/openai.yaml
-    scripts/
-    references/
-    assets/
+    SKILL.md              # required, platform-neutral instructions
+    scripts/              # optional deterministic helpers
+    references/           # optional docs loaded only when needed
+    assets/               # optional templates, images, sample files
+    metadata/             # optional platform-neutral or platform-specific metadata
+
+templates/
+  skill/                  # skeleton used by scripts/new-skill.sh
+
+docs/
+  conventions.md          # naming and authoring rules
+
+platforms/
+  codex/                  # optional Codex install or adapter notes
+  claude/                 # optional Claude install or adapter notes
 ```
 
-Keep every skill self-contained under `skills/<skill-name>`.
+The source of truth is always `skills/<skill-name>/SKILL.md`. Platform-specific metadata should be additive and should not replace the core instructions.
 
 ## Create a Skill
-
-Use the bundled helper:
 
 ```bash
 ./scripts/new-skill.sh my-skill
 ```
 
-Add optional resource directories when needed:
+Add optional resource directories:
 
 ```bash
 ./scripts/new-skill.sh my-skill scripts,references,assets
@@ -36,13 +44,15 @@ Validate a skill:
 ./scripts/validate-skill.sh skills/my-skill
 ```
 
-## Install Locally
+## Install for an Agent
 
-Codex discovers skills from `~/.codex/skills`. Symlink the skill directories you want active:
+For agents that read a skills directory directly, symlink or copy individual skill folders from `skills/`.
+
+Example for Codex:
 
 ```bash
 ln -s "$(pwd)/skills/my-skill" ~/.codex/skills/my-skill
 ```
 
-If a skill changes significantly, run validation before using it in normal work.
+For other agents, keep the same skill folder layout when possible and place platform-specific files under `metadata/` only when needed.
 
