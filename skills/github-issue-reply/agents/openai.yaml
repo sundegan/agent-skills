@@ -1,4 +1,4 @@
 interface:
   display_name: "GitHub Issue Reply"
-  short_description: "核实最新版本并生成自然克制的 GitHub Issue 回复"
-  default_prompt: "Use $github-issue-reply to investigate this issue and draft a natural, evidence-based reply with the relevant release link."
+  short_description: "核实版本、回复 Issue，并设置标签和处理关闭状态"
+  default_prompt: "Use $github-issue-reply to investigate and handle this issue with a natural reply, suitable labels, and closure when it is conclusively resolved."
