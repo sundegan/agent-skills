@@ -1,13 +1,13 @@
 ---
 name: release-version
-description: Prepare and publish project releases by discovering the repository's release process, updating version files, updating release notes with changelog content, committing release changes, creating Git tags, pushing commits and tags, and checking GitHub Actions builds. Use when the user asks Agent to release a version, publish a release, bump a version, create a release tag, or prepare release notes.
+description: Prepare and publish project releases by discovering the repository's release process, updating version files and release notes, committing and tagging release changes, pushing commits and tags, checking GitHub Actions, publishing GitHub Releases, and updating a related homebrew-tap repository when one exists. Use when the user asks Agent to release a version, publish a release, bump a version, create a release tag, prepare release notes, or ensure the latest release is installable with Homebrew.
 ---
 
 # Release Version
 
 ## Goal
 
-Release the current project according to its own conventions. First infer and summarize the repository's release process, then update version metadata and release notes, create the release commit and tag, push the commit and tag, verify GitHub Actions, and update the GitHub Release description with this release's changelog content.
+Release the current project according to its own conventions. First infer and summarize the repository's release process, then update version metadata and release notes, create the release commit and tag, push the commit and tag, verify GitHub Actions, update the GitHub Release description with this release's changelog content, and update the repository owner's Homebrew tap when present so Homebrew installs the new version.
 
 ## Safety Rules
 
@@ -17,6 +17,10 @@ Release the current project according to its own conventions. First infer and su
 - Do not force-push release branches or tags.
 - Stop and ask if the version number, release branch, package registry, or release target is ambiguous.
 - Keep unrelated working-tree changes out of the release commit.
+- Treat a Homebrew tap update as part of the release when the repository exists. Do not report the release as fully complete until the tap is updated and verified, or a concrete blocker is reported.
+- Do not guess release asset URLs, Formula/Cask names, archive formats, platform mappings, or checksums. Derive them from the published release and the existing tap definition.
+- Do not update a tap before the GitHub Release and required assets are available. Never commit placeholder or stale checksums.
+- Keep unrelated changes in the tap worktree out of the tap update commit.
 
 ## Workflow
 
@@ -70,6 +74,20 @@ Release the current project according to its own conventions. First infer and su
    - Put the changelog content for this version into the release notes.
    - Mark prereleases or drafts according to the version and project convention.
    - Verify the final GitHub Release URL and notes.
+12. Discover and update the Homebrew tap:
+   - After the GitHub Release and its required assets are published, use `gh repo view --json owner,nameWithOwner` to determine the source repository owner.
+   - Check for `<owner>/homebrew-tap` with `gh repo view <owner>/homebrew-tap`. Also inspect the source repository's release workflows, documentation, and scripts for an explicitly configured tap repository; use that repository when it differs from the owner default.
+   - If no tap repository exists and none is configured, record that Homebrew maintenance was skipped because there is no tap. Do not create a new tap unless the user explicitly requests it.
+   - If the tap exists, inspect its `README*`, `.github/workflows/*`, `Formula/`, `Casks/`, scripts, recent commits, and contribution instructions before editing. Determine whether source-repository automation is expected to update the tap.
+   - If release automation updates the tap, wait for it to finish and verify the resulting Formula/Cask. Make a manual update only when automation is absent, failed, or did not produce the correct version.
+   - Clone or reuse a clean tap worktree without disturbing unrelated local changes. Locate the Formula or Cask associated with the released project from existing names, URLs, descriptions, and tap documentation; do not assume it matches the source repository name.
+   - Update every version-dependent field required by the existing definition, including `version`, release asset or source URLs, platform/architecture mappings, and SHA-256 checksums. Preserve the tap's existing Ruby style and installation strategy.
+   - Obtain URLs and assets from the published GitHub Release. Download each referenced artifact and compute its checksum locally with `sha256sum` or `shasum -a 256`; do not copy an unverified checksum from logs or use a checksum for a redirect/error response.
+   - Inspect the tap diff and ensure it changes only files required for this release. Run the tap's documented checks plus applicable Homebrew checks such as `brew style`, `brew audit --strict`, or `brew audit --cask` for the changed definition.
+   - Commit the tap update using its established convention, otherwise use `chore: update <formula-or-cask> to <version>`. Push to the tap's normal default branch without force-pushing.
+   - Derive the Homebrew tap name from the selected repository (`<tap-owner>/homebrew-<tap-name>` becomes `<tap-owner>/<tap-name>`). Verify the pushed definition through GitHub, then refresh it locally with `brew update` or `brew tap --force-auto-update <tap-owner>/<tap-name>`.
+   - Prove the public installation path resolves to the new release. Run the documented `brew install` or `brew upgrade` command when it is safe in the current environment, followed by the installed command's version check. At minimum, use `brew info` and `brew fetch` to verify the published definition and artifacts when installation would be destructive or unsupported.
+   - Confirm the reported or installed version equals the released version. Treat stale tap metadata, checksum mismatches, unavailable assets, failed tap CI, or an older installed version as release blockers to investigate and fix when in scope.
 
 ## Review Checklist
 
@@ -80,6 +98,10 @@ Release the current project according to its own conventions. First infer and su
 - Commit and tag are pushed to the intended remote.
 - GitHub Actions for the release commit or tag completed successfully, or failures are clearly reported.
 - GitHub Release notes include the changelog content for this version.
+- The owner's or configured `homebrew-tap` repository was checked with `gh`.
+- If the tap exists, its Formula/Cask references the new release URLs and verified checksums.
+- Tap checks and CI pass, and Homebrew resolves or installs the released version.
+- If no tap exists, that absence is explicitly recorded rather than treated as an update success.
 
 ## Final Response
 
@@ -92,4 +114,6 @@ Respond in the user's language. Include:
 - Push result and remote.
 - GitHub Actions status and any workflow URLs available.
 - GitHub Release URL or status.
+- Homebrew tap repository detection result and repository URL when present.
+- Updated Formula/Cask path, tap commit hash, push result, checks performed, and the Homebrew version verification result.
 - Any skipped checks, failures, or follow-up actions.
