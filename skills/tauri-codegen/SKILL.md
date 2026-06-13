@@ -1,6 +1,6 @@
 ---
 name: tauri-codegen
-description: Generate, modify, and refactor code in existing Tauri applications while preserving the repository's established Rust, frontend, configuration, architecture, and testing conventions. Use when implementing Tauri features, commands, events, state, plugins, windows, menus, tray behavior, permissions, capabilities, frontend integrations, native APIs, or related bug fixes and refactors.
+description: Generate, modify, and refactor code in existing Tauri applications while preserving the repository's established Rust, frontend, desktop-native UI, configuration, architecture, and testing conventions. Use when implementing Tauri features, commands, events, state, plugins, windows, menus, tray behavior, permissions, capabilities, frontend interfaces, native APIs, or related bug fixes and refactors.
 ---
 
 # Tauri Codegen
@@ -18,8 +18,9 @@ Implement complete Tauri application changes that fit the existing codebase. Kee
 2. Discover the local implementation style:
    - Determine the Tauri major version from `Cargo.toml`, lockfiles, configuration, and existing APIs. Do not assume a version.
    - Read the closest related Rust modules, frontend components or services, Tauri configuration, capabilities, permissions, and tests.
+   - Inspect the application shell, global styles, design tokens, shared controls, icons, spacing, typography, window chrome, and nearby screens before changing frontend UI.
    - Trace the full path for similar behavior: UI action, frontend wrapper, serialization boundary, Tauri command or event, domain logic, state, and native side effect.
-   - Record the local conventions for module placement, naming, errors, serialization, state ownership, async work, logging, dependency injection, and tests.
+   - Record the local conventions for module placement, naming, errors, serialization, state ownership, async work, logging, dependency injection, visual hierarchy, interaction feedback, and tests.
 3. Plan the smallest coherent change:
    - Reuse existing helpers and boundaries when they fit.
    - Add an abstraction only when it removes meaningful duplication, isolates a real boundary, or matches a pattern already used by the repository.
@@ -28,6 +29,7 @@ Implement complete Tauri application changes that fit the existing codebase. Kee
 4. Implement end to end:
    - Make the Rust backend, frontend integration, configuration, permissions, capabilities, and platform-specific changes required for the feature to work.
    - Preserve existing public interfaces and behavior unless the task explicitly changes them.
+   - Make new UI look like part of the existing application and behave like desktop software rather than an embedded website.
    - Follow existing error and result types. Return actionable errors across the invoke boundary without exposing sensitive internals.
    - Keep payload types explicit and serialization-compatible on both sides.
    - Use the repository's established wrappers for `invoke`, events, windows, plugins, and native APIs instead of creating parallel access paths.
@@ -48,8 +50,23 @@ Implement complete Tauri application changes that fit the existing codebase. Kee
 7. Verify the final result:
    - Run the smallest relevant tests first, then the repository's applicable formatter, linter, type checker, Rust checks, and build commands.
    - Prefer discovered project commands such as `cargo fmt --check`, `cargo clippy`, `cargo test`, frontend test scripts, type checks, and Tauri build or dev smoke checks.
+   - For UI changes, inspect the running application at representative window sizes and on each affected platform when available. Check visual consistency, clipping, focus, hover, pressed, disabled, loading, empty, and error states.
    - Re-read the final diff for accidental generated files, broad permission changes, duplicated code, stale references, and unrelated formatting churn.
    - Confirm that new files are used, removed files are no longer referenced, and the implementation covers the user-visible workflow end to end.
+
+## Desktop UI Rules
+
+- Treat the application's existing visual language as the primary source of truth. Reuse its design tokens, shared components, icon library, spacing scale, typography, control dimensions, colors, borders, and interaction states.
+- Prefer native desktop composition: compact toolbars, menus, sidebars, inspectors, split panes, lists, tables, tabs, status areas, contextual actions, and dialogs with clear button hierarchy.
+- Use the system font stack unless the application already defines another product font. Keep text sizes and spacing appropriate for a desktop utility rather than a marketing page.
+- Keep controls compact, stable, and keyboard-friendly. Provide clear focus, hover, pressed, selected, disabled, loading, and validation states consistent with nearby controls.
+- Use familiar icons for common desktop actions and provide tooltips for icon-only controls. Follow the application's established icon set instead of mixing visual styles.
+- Respect platform and window behavior, including title bar or traffic-light space, draggable regions, safe areas, resizing, minimum window size, context menus, shortcuts, and light or dark appearance where relevant.
+- Use native Tauri or operating-system dialogs, menus, notifications, and file pickers when the application already follows that pattern and native behavior improves consistency.
+- Avoid webpage aesthetics: oversized hero text, marketing sections, large decorative cards, excessive rounded containers, floating page sections, pill-shaped text controls, broad whitespace, ornamental gradients, background blobs, and navigation designed like a public website.
+- Do not put every group inside a card or nest cards. Use alignment, spacing, separators, section labels, panes, and surface hierarchy to structure dense desktop workflows.
+- Keep motion restrained and functional. Do not add entrance animation, parallax, or decorative transitions that make routine desktop operations feel like page navigation.
+- Preserve visual consistency over generic platform imitation. When the application has an established cross-platform design, make the new UI fit it while retaining desktop-native density and behavior.
 
 ## Design Rules
 
@@ -65,7 +82,8 @@ Implement complete Tauri application changes that fit the existing codebase. Kee
 ## Completion Criteria
 
 - The feature or fix works across every affected layer.
-- The implementation matches nearby code style and architecture.
+- The implementation matches nearby code style, architecture, and visual language.
+- Frontend changes feel like native desktop application UI and do not introduce webpage-like composition.
 - No task-created dead code, stale configuration, or unused permission remains.
 - Existing behavior outside the task remains unchanged.
 - Relevant tests are updated, and new feature logic has the strongest practical automated coverage.

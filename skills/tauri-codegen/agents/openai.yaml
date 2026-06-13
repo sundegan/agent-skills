@@ -1,4 +1,4 @@
 interface:
   display_name: "Tauri Codegen"
-  short_description: "Generate maintainable Tauri application code"
+  short_description: "Build maintainable Tauri apps with native desktop UI"
   default_prompt: "Use $tauri-codegen to implement this Tauri application change in the repository's existing style."
